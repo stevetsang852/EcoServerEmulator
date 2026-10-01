@@ -24,6 +24,7 @@ namespace MapServer
         static void Main(string[] args)
         {
             Logger.Initialize();
+            PacketDump.Initialize("map");
             protocols = Utilities.ReadInterfaceConfig("MapServerInterface.json");
             mapServerInstance = new MapServerProtocol();
             var serverApp = new EcoServerApp(17833, EcoServer_NewRequestReceived);

@@ -73,6 +73,8 @@ namespace MapServer
         /// <returns></returns>
         public async void UserLogin(EcoSession session, BasePacket packet)
         {
+            // packet was already decrypted in EcoServerApp (Encryption.Decrypt) before dispatch
+            PacketDump.LogC2S(packet, nameof(UserLogin));
             var login_data = new LoginData(packet.Data);
             Logger.Debug($"Received Login Request, Username: {login_data.Username}, Password:{login_data.Password}, MacAddress:{login_data.MacAddress.ToHexString()}, SingleSignOn:{login_data.SingleSignOn.ToString()}");
             LoginAuthResult loginAuthResult;
@@ -210,6 +212,7 @@ namespace MapServer
         /// <param name="packet"></param>
         public void CharaMove(EcoSession session, BasePacket packet)
         {
+            PacketDump.LogC2S(packet, nameof(CharaMove));
             Logger.Debug($"Received CharaMove Request :{packet.Data.ToHexString()}");
         }
 
@@ -231,6 +234,7 @@ namespace MapServer
         /// <param name="packet"></param>
         public async void RequestMove(EcoSession session, BasePacket packet)
         {
+            PacketDump.LogC2S(packet, nameof(RequestMove));
             ushort mov = await DatabaseManager.SelectAsyncUshort(
                 $@"SELECT Mov FROM CharaData WHERE id = {session.CharaID}"
             );
