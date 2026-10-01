@@ -300,3 +300,7 @@ __pycache__/
 CommonLib/settings.json
 /include
 include
+
+# Post-decrypt packet dumps (PacketDump.cs). May contain account/password data — never commit.
+[Ll]ogs/
+packets-*.log*

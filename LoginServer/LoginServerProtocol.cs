@@ -77,6 +77,8 @@ namespace LoginServer
         /// <returns></returns>
         public async void UserLogin(EcoSession session, BasePacket packet)
         {
+            // packet was already decrypted in EcoServerApp (Encryption.Decrypt) before dispatch
+            PacketDump.LogC2S(packet, nameof(UserLogin));
             try
             {
                 var login_data = new LoginData(packet.Data);
