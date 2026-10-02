@@ -45,3 +45,14 @@
   | `PacketDump.Directory` | `ECO_PACKET_DUMP_DIR` | `Logs` |
 
   `001F` carries the username, salted password hash and MAC address. With masking on (default) those bytes are replaced by `2a` and the note says `帳密已遮蔽`; with masking off the note says `含帳密，勿上傳`. `Logs/` and `packets-*.log` are in `.gitignore` — never commit or upload these files. Note: the existing debug log (`Logs/debug.log`) already prints the 001F username and password hash unmasked; that is unchanged by this feature.
+
+### Recording a session for eco-lab (step by step)
+  1. Build the solution (Windows, .NET Framework 4.5.2) and make sure MySQL has `sql/eco.sql` imported and your login in the `account` table.
+  2. Turn the dump on before starting the servers: set env var `ECO_PACKET_DUMP=1` (or `PacketDump.Enabled=true` in `LoginServer/App.config` and `MapServer/App.config`). Leave `ECO_PACKET_DUMP_MASK` unset so credentials stay masked.
+  3. Start the servers in order: WorldServer → LoginServer → MapServer. Each prints the full path of its `packets-*.log` at startup.
+  4. Point the client's `server.lst` at your own server (127.0.0.1 and the LoginServer port, 17832 by default). Only ever connect to your own server.
+  5. Start `eco.exe /launch -u:<username> -p:<password>`, log in, enter the map, and walk a few steps. Use one client connection at a time.
+  6. Close the client, then stop the servers.
+  7. Collect `Logs/packets-login.log` and `Logs/packets-map.log` from next to each server exe. Check that the `001F` lines say `帳密已遮蔽`.
+
+  > ⚠️ **Do not upload `Logs/debug.log`.** It prints the `001F` username and password hash **unmasked**. Only share the `packets-*.log` files, and only if the `001F` note says `帳密已遮蔽`.
