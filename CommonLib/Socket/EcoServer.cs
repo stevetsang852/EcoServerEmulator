@@ -110,8 +110,6 @@ namespace CommonLib.Socket
 
         public uint CharaID { get; set; }
 
-        public List<EcoSession> AllSessions { get; set; }
-
         protected override void OnSessionStarted()
         {
             CommonLib.Logger.Debug($"user: {this.LocalEndPoint.Address} connected");
@@ -133,7 +131,6 @@ namespace CommonLib.Socket
         {
             //add you logics which will be executed after the session is closed
             CommonLib.Logger.Debug($"user: {this.LocalEndPoint.Address} disconnected");
-            AllSessions?.Remove(this);
             base.OnSessionClosed(reason);
         }
 

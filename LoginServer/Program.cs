@@ -25,12 +25,12 @@ namespace LoginServer
         static void Main(string[] args)
         {
             Logger.Initialize();
-            PacketDump.Initialize("login");
             protocols = Utilities.ReadInterfaceConfig("LoginServerInterface.json");
             loginServerInstance = new LoginServerProtocol();
             var serverApp = new EcoServerApp(17832, EcoServer_NewRequestReceived);
             serverApp.Start();
-            while (Console.ReadKey().Key != ConsoleKey.Escape) { }
+            ServerLifetime.WaitForShutdown();
+            serverApp.Stop();
         }
     }
 }

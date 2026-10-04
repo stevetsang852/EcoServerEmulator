@@ -73,8 +73,6 @@ namespace MapServer
         /// <returns></returns>
         public async void UserLogin(EcoSession session, BasePacket packet)
         {
-            // packet was already decrypted in EcoServerApp (Encryption.Decrypt) before dispatch
-            PacketDump.LogC2S(packet, nameof(UserLogin));
             var login_data = new LoginData(packet.Data);
             Logger.Debug($"Received Login Request, Username: {login_data.Username}, Password:{login_data.Password}, MacAddress:{login_data.MacAddress.ToHexString()}, SingleSignOn:{login_data.SingleSignOn.ToString()}");
             LoginAuthResult loginAuthResult;
@@ -212,8 +210,42 @@ namespace MapServer
         /// <param name="packet"></param>
         public void CharaMove(EcoSession session, BasePacket packet)
         {
-            PacketDump.LogC2S(packet, nameof(CharaMove));
-            Logger.Debug($"Received CharaMove Request :{packet.Data.ToHexString()}");
+            if (packet.Data == null || packet.Data.Length < 8)
+            {
+                Logger.Error($"Invalid CharaMove packet length: {packet.Data?.Length ?? 0}");
+                return;
+            }
+
+            if (session.CharaID == 0)
+            {
+                Logger.Error("Ignoring CharaMove request without a selected character.");
+                return;
+            }
+
+            short x = unchecked((short)packet.Data.ToUInt16(0));
+            short y = unchecked((short)packet.Data.ToUInt16(2));
+            ushort direction = packet.Data.ToUInt16(4);
+            ushort moveType = packet.Data.ToUInt16(6);
+
+            if (x < byte.MinValue || x > byte.MaxValue ||
+                y < byte.MinValue || y > byte.MaxValue ||
+                direction > byte.MaxValue)
+            {
+                Logger.Error($"Ignoring out-of-range CharaMove position ({x}, {y}, {direction}).");
+                return;
+            }
+
+            Logger.Debug($"Received CharaMove for character {session.CharaID}: X={x}, Y={y}, Dir={direction}, MoveType={moveType}");
+            UpdateCharaPosition(session.CharaID, (byte)x, (byte)y, (byte)direction);
+        }
+
+        private async void UpdateCharaPosition(uint charaId, byte x, byte y, byte direction)
+        {
+            int updatedRows = await DatabaseManager.UpdateCharaPositionAsync(charaId, x, y, direction);
+            if (updatedRows != 1)
+            {
+                Logger.Error($"Could not save position for character {charaId}; affected rows: {updatedRows}.");
+            }
         }
 
         /// <summary>
@@ -234,7 +266,6 @@ namespace MapServer
         /// <param name="packet"></param>
         public async void RequestMove(EcoSession session, BasePacket packet)
         {
-            PacketDump.LogC2S(packet, nameof(RequestMove));
             ushort mov = await DatabaseManager.SelectAsyncUshort(
                 $@"SELECT Mov FROM CharaData WHERE id = {session.CharaID}"
             );

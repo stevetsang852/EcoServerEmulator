@@ -15,7 +15,17 @@ namespace CommonLib
             get {
                 if(string.IsNullOrEmpty(connectionString))
                 {
-                    connectionString = Utilities.ReadSettings("settings.json").ConnectionString;
+                    connectionString = Environment.GetEnvironmentVariable("ECO_DB_CONNECTION_STRING");
+                    if (string.IsNullOrWhiteSpace(connectionString))
+                    {
+                        Settings settings = Utilities.ReadSettings("settings.json");
+                        if (settings == null || string.IsNullOrWhiteSpace(settings.ConnectionString))
+                        {
+                            throw new InvalidOperationException(
+                                "Set ECO_DB_CONNECTION_STRING or provide a valid settings.json.");
+                        }
+                        connectionString = settings.ConnectionString;
+                    }
                 }
                 return connectionString;
             }
@@ -76,6 +86,22 @@ namespace CommonLib
                     }
                 }
                 return await cmd.ExecuteNonQueryAsync();
+            });
+        }
+
+        public static async Task<int> UpdateCharaPositionAsync(uint charaId, byte x, byte y, byte direction)
+        {
+            return await RunAsync(async (db) =>
+            {
+                using (var cmd = db.CreateCommand())
+                {
+                    cmd.CommandText = "UPDATE `CharaData` SET `X` = @x, `Y` = @y, `Dir` = @direction WHERE `id` = @id";
+                    cmd.Parameters.AddWithValue("@x", x);
+                    cmd.Parameters.AddWithValue("@y", y);
+                    cmd.Parameters.AddWithValue("@direction", direction);
+                    cmd.Parameters.AddWithValue("@id", charaId);
+                    return await cmd.ExecuteNonQueryAsync();
+                }
             });
         }
 

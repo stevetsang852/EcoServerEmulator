@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: eco
+      MYSQL_USER: eco
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-eco-local-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root-local-password}
+    volumes:
+      - eco-db:/var/lib/mysql
+      - ./sql/eco.sql:/docker-entrypoint-initdb.d/001-eco.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=TCP -h 127.0.0.1 -ueco eco --silent --execute='SELECT 1 FROM MapServer LIMIT 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+    restart: unless-stopped
+
+  eco:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ECO_DB_CONNECTION_STRING: Server=db;Port=3306;User ID=eco;Password=${MYSQL_PASSWORD:-eco-local-password};Database=eco;MinimumPoolSize=1;
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:17831:17831"
+      - "127.0.0.1:17832:17832"
+      - "127.0.0.1:17833:17833"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c 'for port in 17831 17832 17833;
+          do echo >"/dev/tcp/127.0.0.1/$$port" || exit 1;
+          done'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  eco-db:

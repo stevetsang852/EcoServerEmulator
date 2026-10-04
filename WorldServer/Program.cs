@@ -31,7 +31,8 @@ namespace WorldServer
             worldServerInstance = new WorldServerProtocol();
             var serverApp = new EcoServerApp(17831, EcoServer_NewRequestReceived);
             serverApp.Start();
-            while (Console.ReadKey().Key != ConsoleKey.Escape) { }
+            ServerLifetime.WaitForShutdown();
+            serverApp.Stop();
         }
     }
 }

@@ -94,8 +94,8 @@
     <Compile Include="Data\Tribe.cs" />
     <Compile Include="Extenstions.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="PacketDump.cs" />
     <Compile Include="PacketKey.cs" />
+    <Compile Include="ServerLifetime.cs" />
     <Compile Include="Packets\BasePacket.cs" />
     <Compile Include="Packets\ISendPacket.cs" />
     <Compile Include="Packets\LoginAuthResult.cs" />
